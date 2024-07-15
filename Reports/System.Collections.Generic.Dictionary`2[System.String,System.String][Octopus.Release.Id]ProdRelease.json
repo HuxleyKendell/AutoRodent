@@ -1,0 +1,320 @@
+{
+  "individualResults": [
+    {
+      "onlyInSource": [],
+      "onlyInTarget": [
+        {
+          "objectType": "StoredProcedure",
+          "name": "GetAllWidgets",
+          "schema": "dbo",
+          "definitionBefore": "",
+          "definitionAfter": "CREATE   PROCEDURE [dbo].[GetAllWidgets]\\r\\nAS\\r\\nBEGIN\\r\\n\\tSELECT RecordID,\\r\\n           Description \\r\\n\\tFROM Widgets\\r\\nEND\\r\\nGO\\r\\n"
+        },
+        {
+          "objectType": "View",
+          "name": "CurrentPrices",
+          "schema": "dbo",
+          "definitionBefore": "",
+          "definitionAfter": "CREATE   VIEW [dbo].[CurrentPrices]\\r\\n\\tAS\\r\\n\\tSELECT WidgetID, Price, Description\\r\\n\\tFROM Widgets INNER JOIN\\r\\n\\t\\tWidgetPrices ON Widgets.RecordID \u003d WidgetPrices.WidgetID\\r\\nGO\\r\\n"
+        }
+      ],
+      "differences": [],
+      "database": "WidgetProd",
+      "timestamp": "2023-12-20T02:00:42.834639600",
+      "operation": "changes",
+      "exception": null,
+      "licenseFailed": false
+    },
+    {
+      "driftDetected": false,
+      "onlyInSource": [],
+      "onlyInTarget": [],
+      "differences": [],
+      "database": "WidgetProd",
+      "timestamp": "2023-12-20T02:00:42.834639600",
+      "operation": "drift",
+      "exception": null,
+      "licenseFailed": false
+    },
+    {
+      "sql": "-- -\u003d\u003d\u003d\u003d\u003d\u003d\u003d\u003d\u003d\u003d\u003d\u003d\u003d\u003d\u003d\u003d\u003d\u003d\u003d\u003d\u003d\u003d\u003d\u003d\u003d\u003d\u003d\u003d\u003d\u003d\u003d\u003d\u003d\u003d\u003d\u003d\n-- Flyway Dry Run (2023-12-20 02:01:06)\n-- -\u003d\u003d\u003d\u003d\u003d\u003d\u003d\u003d\u003d\u003d\u003d\u003d\u003d\u003d\u003d\u003d\u003d\u003d\u003d\u003d\u003d\u003d\u003d\u003d\u003d\u003d\u003d\u003d\u003d\u003d\u003d\u003d\u003d\u003d\u003d\u003d\n\nUSE [WidgetProd]\nGO\nSET ANSI_NULLS ON\nGO\nUSE [WidgetProd]\nGO\nSET ANSI_NULLS ON\nGO\nUSE [WidgetProd]\nGO\nSET ANSI_NULLS ON\nGO\n\n-- Executing: validate (with callbacks)\n-- ---------------------------------------------------------------------------------------\nUSE [WidgetProd]\nGO\nSET ANSI_NULLS ON\nGO\n\n-- Executing: migrate (with callbacks)\n-- ---------------------------------------------------------------------------------------\nUSE [WidgetProd]\nGO\nSET ANSI_NULLS ON\nGO\nUSE [WidgetProd]\nGO\nSET ANSI_NULLS ON\nGO\n\n-- Executing: migrate -\u003e v002.20230703112421 (with callbacks)\n-- ---------------------------------------------------------------------------------------\n\n-- Source: C:\\Users\\redgate\\Desktop\\Flyway-AutoPilot\\migrations\\V002_20230703112421__Huxley_Kendell.sql\n-- -----------------------------------------------------------------------------------------------------\nSET NUMERIC_ROUNDABORT OFF\nGO\nSET ANSI_PADDING, ANSI_WARNINGS, CONCAT_NULL_YIELDS_NULL, ARITHABORT, QUOTED_IDENTIFIER, ANSI_NULLS ON\nGO\nPRINT N\u0027Creating [dbo].[CurrentPrices]\u0027\nGO\nCREATE   VIEW [dbo].[CurrentPrices]\r\n\tAS\r\n\tSELECT WidgetID, Price, Description\r\n\tFROM Widgets INNER JOIN\r\n\t\tWidgetPrices ON Widgets.RecordID \u003d WidgetPrices.WidgetID\nGO\nINSERT INTO [WidgetProd].[dbo].[flyway_schema_history] ([installed_rank], [version], [description], [type], [script], [checksum], [installed_by], [execution_time], [success]) VALUES (12, \u0027002.20230703112421\u0027, \u0027Huxley Kendell\u0027, \u0027SQL\u0027, \u0027V002_20230703112421__Huxley_Kendell.sql\u0027, -2139334808, \u0027Octopus\u0027, 2, 1)\nGO\nUSE [WidgetProd]\nGO\nSET ANSI_NULLS ON\nGO\n\n-- Executing: migrate -\u003e v003.20230712152932 (with callbacks)\n-- ---------------------------------------------------------------------------------------\n\n-- Source: C:\\Users\\redgate\\Desktop\\Flyway-AutoPilot\\migrations\\V003_20230712152932__NewProc-dbo-GetAllWidgets.sql\n-- ----------------------------------------------------------------------------------------------------------------\nSET NUMERIC_ROUNDABORT OFF\nGO\nSET ANSI_PADDING, ANSI_WARNINGS, CONCAT_NULL_YIELDS_NULL, ARITHABORT, QUOTED_IDENTIFIER, ANSI_NULLS ON\nGO\nPRINT N\u0027Creating [dbo].[GetAllWidgets]\u0027\nGO\nCREATE   PROCEDURE [dbo].[GetAllWidgets]\r\nAS\r\nBEGIN\r\n\tSELECT RecordID,\r\n           Description \r\n\tFROM Widgets\r\nEND\nGO\nINSERT INTO [WidgetProd].[dbo].[flyway_schema_history] ([installed_rank], [version], [description], [type], [script], [checksum], [installed_by], [execution_time], [success]) VALUES (13, \u0027003.20230712152932\u0027, \u0027NewProc-dbo-GetAllWidgets\u0027, \u0027SQL\u0027, \u0027V003_20230712152932__NewProc-dbo-GetAllWidgets.sql\u0027, 1879081164, \u0027Octopus\u0027, 1, 1)\nGO\nUSE [WidgetProd]\nGO\nSET ANSI_NULLS ON\nGO\n\n-- Executing: migrate -\u003e v004.20230718170924 (with callbacks)\n-- ---------------------------------------------------------------------------------------\n\n-- Source: C:\\Users\\redgate\\Desktop\\Flyway-AutoPilot\\migrations\\V004_20230718170924__NewStatesTable.sql\n-- -----------------------------------------------------------------------------------------------------\nSET NUMERIC_ROUNDABORT OFF\nGO\nSET ANSI_PADDING, ANSI_WARNINGS, CONCAT_NULL_YIELDS_NULL, ARITHABORT, QUOTED_IDENTIFIER, ANSI_NULLS ON\nGO\nPRINT N\u0027Creating [dbo].[States]\u0027\nGO\nCREATE TABLE [dbo].[States]\r\n(\r\n[ID] [int] NOT NULL,\r\n[Abbreviation] [nvarchar] (5) NOT NULL,\r\n[Name] [nvarchar] (100) NOT NULL\r\n)\nGO\nPRINT N\u0027Creating primary key [PK_States] on [dbo].[States]\u0027\nGO\nALTER TABLE [dbo].[States] ADD CONSTRAINT [PK_States] PRIMARY KEY CLUSTERED ([ID])\nGO\nINSERT INTO [WidgetProd].[dbo].[flyway_schema_history] ([installed_rank], [version], [description], [type], [script], [checksum], [installed_by], [execution_time], [success]) VALUES (14, \u0027004.20230718170924\u0027, \u0027NewStatesTable\u0027, \u0027SQL\u0027, \u0027V004_20230718170924__NewStatesTable.sql\u0027, -107076106, \u0027Octopus\u0027, 1, 1)\nGO\nUSE [WidgetProd]\nGO\nSET ANSI_NULLS ON\nGO\n\n-- Executing: migrate -\u003e v005.20230801210409 (with callbacks)\n-- ---------------------------------------------------------------------------------------\n\n-- Source: C:\\Users\\redgate\\Desktop\\Flyway-AutoPilot\\migrations\\V005_20230801210409__stephanie_herr.sql\n-- -----------------------------------------------------------------------------------------------------\nSET NUMERIC_ROUNDABORT OFF\nGO\nSET ANSI_PADDING, ANSI_WARNINGS, CONCAT_NULL_YIELDS_NULL, ARITHABORT, QUOTED_IDENTIFIER, ANSI_NULLS ON\nGO\nPRINT N\u0027Dropping constraints from [dbo].[States]\u0027\nGO\nALTER TABLE [dbo].[States] DROP CONSTRAINT [PK_States]\nGO\nPRINT N\u0027Dropping [dbo].[States]\u0027\nGO\nDROP TABLE [dbo].[States]\nGO\nINSERT INTO [WidgetProd].[dbo].[flyway_schema_history] ([installed_rank], [version], [description], [type], [script], [checksum], [installed_by], [execution_time], [success]) VALUES (15, \u0027005.20230801210409\u0027, \u0027stephanie herr\u0027, \u0027SQL\u0027, \u0027V005_20230801210409__stephanie_herr.sql\u0027, -1132111108, \u0027Octopus\u0027, 2, 1)\nGO\nUSE [WidgetProd]\nGO\nSET ANSI_NULLS ON\nGO\n",
+      "timestamp": "2023-12-20T02:00:42.834639600",
+      "operation": "dryrun",
+      "exception": null,
+      "licenseFailed": false
+    },
+    {
+      "initialSchemaVersion": "001.20230703120714",
+      "targetSchemaVersion": "005.20230801210409",
+      "schemaName": "",
+      "migrations": [
+        {
+          "category": "Versioned",
+          "version": "002.20230703112421",
+          "description": "Huxley Kendell",
+          "type": "SQL",
+          "filepath": "C:\\Users\\redgate\\Desktop\\Flyway-AutoPilot\\migrations\\V002_20230703112421__Huxley_Kendell.sql",
+          "executionTime": 40
+        },
+        {
+          "category": "Versioned",
+          "version": "003.20230712152932",
+          "description": "NewProc-dbo-GetAllWidgets",
+          "type": "SQL",
+          "filepath": "C:\\Users\\redgate\\Desktop\\Flyway-AutoPilot\\migrations\\V003_20230712152932__NewProc-dbo-GetAllWidgets.sql",
+          "executionTime": 15
+        },
+        {
+          "category": "Versioned",
+          "version": "004.20230718170924",
+          "description": "NewStatesTable",
+          "type": "SQL",
+          "filepath": "C:\\Users\\redgate\\Desktop\\Flyway-AutoPilot\\migrations\\V004_20230718170924__NewStatesTable.sql",
+          "executionTime": 25
+        },
+        {
+          "category": "Versioned",
+          "version": "005.20230801210409",
+          "description": "stephanie herr",
+          "type": "SQL",
+          "filepath": "C:\\Users\\redgate\\Desktop\\Flyway-AutoPilot\\migrations\\V005_20230801210409__stephanie_herr.sql",
+          "executionTime": 22
+        }
+      ],
+      "migrationsExecuted": 4,
+      "success": true,
+      "flywayVersion": "9.22.3",
+      "database": "WidgetProd",
+      "warnings": [
+        "outOfOrder mode is active. Migration of schema [dbo] may not be reproducible."
+      ],
+      "timestamp": "2023-12-20T02:00:42.834639600",
+      "operation": "migrate",
+      "exception": null,
+      "licenseFailed": false
+    },
+    {
+      "schemaVersion": "005.20230801210409",
+      "schemaName": "",
+      "migrations": [
+        {
+          "category": "Baseline",
+          "version": "001.20230703120714",
+          "rawVersion": "001.20230703120714",
+          "description": "baseline",
+          "type": "SQL_BASELINE",
+          "installedOnUTC": "2023-12-20T01:42:51.400Z",
+          "state": "Baseline",
+          "undoable": "No",
+          "filepath": "C:\\Users\\redgate\\Desktop\\Flyway-AutoPilot\\migrations\\B001_20230703120714__baseline.sql",
+          "undoFilepath": "",
+          "installedBy": "Octopus",
+          "executionTime": 114
+        },
+        {
+          "category": "Versioned",
+          "version": "002.20230703112421",
+          "rawVersion": "002.20230703112421",
+          "description": "Huxley Kendell",
+          "type": "SQL",
+          "installedOnUTC": "2023-12-20T01:42:51.443Z",
+          "state": "Undone",
+          "undoable": "",
+          "filepath": "C:\\Users\\redgate\\Desktop\\Flyway-AutoPilot\\migrations\\V002_20230703112421__Huxley_Kendell.sql",
+          "undoFilepath": "",
+          "installedBy": "Octopus",
+          "executionTime": 15
+        },
+        {
+          "category": "Versioned",
+          "version": "003.20230712152932",
+          "rawVersion": "003.20230712152932",
+          "description": "NewProc-dbo-GetAllWidgets",
+          "type": "SQL",
+          "installedOnUTC": "2023-12-20T01:42:51.483Z",
+          "state": "Undone",
+          "undoable": "",
+          "filepath": "C:\\Users\\redgate\\Desktop\\Flyway-AutoPilot\\migrations\\V003_20230712152932__NewProc-dbo-GetAllWidgets.sql",
+          "undoFilepath": "",
+          "installedBy": "Octopus",
+          "executionTime": 13
+        },
+        {
+          "category": "Versioned",
+          "version": "004.20230718170924",
+          "rawVersion": "004.20230718170924",
+          "description": "NewStatesTable",
+          "type": "SQL",
+          "installedOnUTC": "2023-12-20T01:42:51.543Z",
+          "state": "Undone",
+          "undoable": "",
+          "filepath": "C:\\Users\\redgate\\Desktop\\Flyway-AutoPilot\\migrations\\V004_20230718170924__NewStatesTable.sql",
+          "undoFilepath": "",
+          "installedBy": "Octopus",
+          "executionTime": 34
+        },
+        {
+          "category": "Versioned",
+          "version": "005.20230801210409",
+          "rawVersion": "005.20230801210409",
+          "description": "stephanie herr",
+          "type": "SQL",
+          "installedOnUTC": "2023-12-20T01:42:51.587Z",
+          "state": "Undone",
+          "undoable": "",
+          "filepath": "C:\\Users\\redgate\\Desktop\\Flyway-AutoPilot\\migrations\\V005_20230801210409__stephanie_herr.sql",
+          "undoFilepath": "",
+          "installedBy": "Octopus",
+          "executionTime": 22
+        },
+        {
+          "category": "Versioned",
+          "version": "006.20231220011408",
+          "rawVersion": "006.20231220011408",
+          "description": "redgate",
+          "type": "SQL",
+          "installedOnUTC": "2023-12-20T01:42:51.670Z",
+          "state": "Undone",
+          "undoable": "",
+          "filepath": "",
+          "undoFilepath": "",
+          "installedBy": "Octopus",
+          "executionTime": 61
+        },
+        {
+          "category": "Undo",
+          "version": "006.20231220011408",
+          "rawVersion": "006.20231220011408",
+          "description": "UNDO-redgate",
+          "type": "UNDO_SQL",
+          "installedOnUTC": "2023-12-20T01:42:57.333Z",
+          "state": "Future",
+          "undoable": "",
+          "filepath": "",
+          "undoFilepath": "",
+          "installedBy": "Octopus",
+          "executionTime": 45
+        },
+        {
+          "category": "Undo",
+          "version": "005.20230801210409",
+          "rawVersion": "005.20230801210409",
+          "description": "UNDO-stephanie herr",
+          "type": "UNDO_SQL",
+          "installedOnUTC": "2023-12-20T01:42:57.377Z",
+          "state": "Success",
+          "undoable": "",
+          "filepath": "C:\\Users\\redgate\\Desktop\\Flyway-AutoPilot\\migrations\\U005_20230801210409__UNDO-stephanie_herr.sql",
+          "undoFilepath": "",
+          "installedBy": "Octopus",
+          "executionTime": 21
+        },
+        {
+          "category": "Undo",
+          "version": "004.20230718170924",
+          "rawVersion": "004.20230718170924",
+          "description": "UNDO-NewStatesTable",
+          "type": "UNDO_SQL",
+          "installedOnUTC": "2023-12-20T01:42:57.417Z",
+          "state": "Success",
+          "undoable": "",
+          "filepath": "C:\\Users\\redgate\\Desktop\\Flyway-AutoPilot\\migrations\\U004_20230718170924__UNDO-NewStatesTable.sql",
+          "undoFilepath": "",
+          "installedBy": "Octopus",
+          "executionTime": 20
+        },
+        {
+          "category": "Undo",
+          "version": "003.20230712152932",
+          "rawVersion": "003.20230712152932",
+          "description": "UNDO-NewProc-dbo-GetAllWidgets",
+          "type": "UNDO_SQL",
+          "installedOnUTC": "2023-12-20T01:42:57.447Z",
+          "state": "Success",
+          "undoable": "",
+          "filepath": "C:\\Users\\redgate\\Desktop\\Flyway-AutoPilot\\migrations\\U003_20230712152932__UNDO-NewProc-dbo-GetAllWidgets.sql",
+          "undoFilepath": "",
+          "installedBy": "Octopus",
+          "executionTime": 11
+        },
+        {
+          "category": "Undo",
+          "version": "002.20230703112421",
+          "rawVersion": "002.20230703112421",
+          "description": "UNDO-Huxley Kendell",
+          "type": "UNDO_SQL",
+          "installedOnUTC": "2023-12-20T01:42:57.477Z",
+          "state": "Success",
+          "undoable": "",
+          "filepath": "C:\\Users\\redgate\\Desktop\\Flyway-AutoPilot\\migrations\\U002_20230703112421__UNDO-Huxley_Kendell.sql",
+          "undoFilepath": "",
+          "installedBy": "Octopus",
+          "executionTime": 11
+        },
+        {
+          "category": "Versioned",
+          "version": "002.20230703112421",
+          "rawVersion": "002.20230703112421",
+          "description": "Huxley Kendell",
+          "type": "SQL",
+          "installedOnUTC": "2023-12-20T02:01:07.030Z",
+          "state": "Success",
+          "undoable": "Yes",
+          "filepath": "C:\\Users\\redgate\\Desktop\\Flyway-AutoPilot\\migrations\\V002_20230703112421__Huxley_Kendell.sql",
+          "undoFilepath": "C:\\Users\\redgate\\Desktop\\Flyway-AutoPilot\\migrations\\U002_20230703112421__UNDO-Huxley_Kendell.sql",
+          "installedBy": "Octopus",
+          "executionTime": 40
+        },
+        {
+          "category": "Versioned",
+          "version": "003.20230712152932",
+          "rawVersion": "003.20230712152932",
+          "description": "NewProc-dbo-GetAllWidgets",
+          "type": "SQL",
+          "installedOnUTC": "2023-12-20T02:01:07.067Z",
+          "state": "Success",
+          "undoable": "Yes",
+          "filepath": "C:\\Users\\redgate\\Desktop\\Flyway-AutoPilot\\migrations\\V003_20230712152932__NewProc-dbo-GetAllWidgets.sql",
+          "undoFilepath": "C:\\Users\\redgate\\Desktop\\Flyway-AutoPilot\\migrations\\U003_20230712152932__UNDO-NewProc-dbo-GetAllWidgets.sql",
+          "installedBy": "Octopus",
+          "executionTime": 15
+        },
+        {
+          "category": "Versioned",
+          "version": "004.20230718170924",
+          "rawVersion": "004.20230718170924",
+          "description": "NewStatesTable",
+          "type": "SQL",
+          "installedOnUTC": "2023-12-20T02:01:07.107Z",
+          "state": "Success",
+          "undoable": "Yes",
+          "filepath": "C:\\Users\\redgate\\Desktop\\Flyway-AutoPilot\\migrations\\V004_20230718170924__NewStatesTable.sql",
+          "undoFilepath": "C:\\Users\\redgate\\Desktop\\Flyway-AutoPilot\\migrations\\U004_20230718170924__UNDO-NewStatesTable.sql",
+          "installedBy": "Octopus",
+          "executionTime": 25
+        },
+        {
+          "category": "Versioned",
+          "version": "005.20230801210409",
+          "rawVersion": "005.20230801210409",
+          "description": "stephanie herr",
+          "type": "SQL",
+          "installedOnUTC": "2023-12-20T02:01:07.150Z",
+          "state": "Success",
+          "undoable": "Yes",
+          "filepath": "C:\\Users\\redgate\\Desktop\\Flyway-AutoPilot\\migrations\\V005_20230801210409__stephanie_herr.sql",
+          "undoFilepath": "C:\\Users\\redgate\\Desktop\\Flyway-AutoPilot\\migrations\\U005_20230801210409__UNDO-stephanie_herr.sql",
+          "installedBy": "Octopus",
+          "executionTime": 22
+        }
+      ],
+      "flywayVersion": "9.22.3",
+      "database": "WidgetProd",
+      "allSchemasEmpty": false,
+      "timestamp": "2023-12-20T02:00:42.834639600",
+      "operation": "info",
+      "exception": null,
+      "licenseFailed": false
+    }
+  ]
+}

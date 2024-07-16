@@ -4,53 +4,45 @@
 **AutoRodent** is a comprehensive solution designed to facilitate the creation of a complete Flyway project with full CI/CD capabilities. By providing a schema-only backup, users can automatically generate a Flyway project, making it easier to manage database migrations and integrations.
 
 ## Features
-- Automatically generate Flyway projects from a schema-only backup.
-- Scripts to create and restore necessary databases for testing.
-- Full CI/CD integration with YAML configuration for Azure DevOps.
-- Handy scripts to assist in managing database backups and logical file paths.
-- An exercise book included in the repository to guide learning and practice.
+- Automatically generate a Flyway project from a schema-only backup.
+- Includes scripts to create necessary databases.
+- Integrates seamlessly with Flyway Desktop and Azure DevOps for CI/CD.
 
-## Getting Started
+## Usage Instructions
 
-### Important: Use This Repository as a Template
-**Do not fork this repository!** Instead, use it as a template to ensure your repository remains private. To do this, click on the "Use this template" button on the repository page.
+### 1. Use this Repository as a Template
+**Important:** Do not fork this repository. Use it as a template to keep your repository private.
 
-### Step 1: Use this Repository as a Template
-1. Navigate to the repository page.
-2. Click on the "Use this template" button.
-3. Create a new repository from this template.
+### 2. Clone the Project
+Copy the URL and click **Open From Version Control** inside Flyway Desktop. Clone the project.
 
-### Step 2: Clone the Project
-1. Copy the repository URL.
-2. Open Flyway Desktop.
-3. Select **Open From Version Control** and clone the project using the copied URL.
+### 3. Provide a Schema-Only Backup
+You need to supply the project with a schema-only backup of your desired database. Handy scripts can be found inside the Flyway project, in the `Scripts` folder.
 
-### Step 3: Supply a Schema-Only Backup
-You will need to provide a schema-only backup of your desired database to model your project. The necessary scripts can be found in the `Scripts` folder.
+### 4. Create a Schema-Only Backup
+If you do not have a schema-only backup, you can use the `CreateSchemaBackup.sql` file. Running it inside SSMS allows you to change the name of the database at the top of the script and have a backup put inside the project's `backups` folder.
 
-### Step 4: Create a Schema-Only Backup (if needed)
-If you do not have a schema-only backup, use the `CreateSchemaBackup.sql` file:
-1. Open the file in SSMS.
-2. Change the `SourceDB` variable on line 2 to your database name.
-3. Change the project folder URL on line 9 to match your repository address.
-4. Run the script to create a backup in the project's backup folder.
+**Script: `CreateSchemaBackup.sql`**
+-- Change the source database name and backup file path
+'DECLARE @SourceDB NVARCHAR(128) = 'YourDatabaseName'; -- Change this line'
+'DECLARE @BackupFilePath NVARCHAR(260) = N'C:\YourPath\AutoBackup.bak'; -- Change this line '
+# Flyway Database Management System
 
-### Step 5: Create Databases for Testing
-To create the necessary databases for testing Flyway:
-1. Use the `CreateAllFromBackup.sql` script:
-    - Ensure the variable on line 1 is correct.
-    - Ensure the variables on line 2 & 3 are correct for `LogicalDataFileName` and `LogicalLogFileName`.
-    - Use the `FindLogicalPaths.sql` script if needed to find these values.
-2. Run the script to create all needed databases.
+## Restore Databases from Backup
+To create the necessary databases for Flyway, you can manually restore them using the backup file or use the `CreateAllFromBackup.sql` script.
 
-### Step 6: Use Flyway Desktop
+**Script: `CreateAllFromBackup.sql`**
+```sql
+DECLARE @BackupFilePath NVARCHAR(128) = N'C:\YourPath\AutoBackup.bak'; -- Change this line
+DECLARE @LogicalDataFileName NVARCHAR(128) = 'OriginalLogicalDataFileName'; -- Set to original logical data file name
+DECLARE @LogicalLogFileName NVARCHAR(128) = 'OriginalLogicalLogFileName'; -- Set to original logical log file name
+
+
+## Use Flyway Desktop
 You can now fully utilize Flyway Desktop for database migrations.
 
-### Step 7: CI/CD Integration
-To integrate with CI/CD:
-1. Import your GitHub repository into Azure DevOps.
-2. The YAML configuration inside the project folder should work automatically.
-3. You may need to tweak the YAML and set necessary variables, as explained in the repository.
+## CI/CD Integration
+For CI/CD integration, import your GitHub repo into Azure DevOps. The YAML file inside the project folder should work automatically. Often with YAML, it may need some tweaking and variables; all is explained inside the repository.
 
 ## Additional Resources
-- An exercise book is included in the repository to help guide learning and practice. Make sure to check it out for a hands-on experience.
+An exercise book is included in the repository to help guide learning and further understanding.

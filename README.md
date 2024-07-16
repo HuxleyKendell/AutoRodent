@@ -26,17 +26,17 @@ If you do not have a schema-only backup, you can use the `CreateSchemaBackup.sql
 -- Change the source database name and backup file path
 'DECLARE @SourceDB NVARCHAR(128) = 'YourDatabaseName'; -- Change this line'
 'DECLARE @BackupFilePath NVARCHAR(260) = N'C:\YourPath\AutoBackup.bak'; -- Change this line '
-# Flyway Database Management System
 
-## Restore Databases from Backup
+## 5. Restore Databases from Backup
 To create the necessary databases for Flyway, you can manually restore them using the backup file or use the `CreateAllFromBackup.sql` script.
+You can see a snippet of code, which will likely need changing. You can use the **FindLogicalPaths.sql** to help find these values!
 
 **Script: `CreateAllFromBackup.sql`**
 ```sql
 DECLARE @BackupFilePath NVARCHAR(128) = N'C:\YourPath\AutoBackup.bak'; -- Change this line
 DECLARE @LogicalDataFileName NVARCHAR(128) = 'OriginalLogicalDataFileName'; -- Set to original logical data file name
 DECLARE @LogicalLogFileName NVARCHAR(128) = 'OriginalLogicalLogFileName'; -- Set to original logical log file name
-
+```
 
 ## Use Flyway Desktop
 You can now fully utilize Flyway Desktop for database migrations.

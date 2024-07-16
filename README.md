@@ -39,10 +39,10 @@ DECLARE @LogicalLogFileName NVARCHAR(128) = 'OriginalLogicalLogFileName'; -- Set
 ```
 
 ## Use Flyway Desktop
-You can now fully utilize Flyway Desktop for database migrations.
+You can now fully utilize Flyway Desktop for database changes and deployments.
 
 ## CI/CD Integration
-For CI/CD integration, import your GitHub repo into Azure DevOps. The YAML file inside the project folder should work automatically. Often with YAML, it may need some tweaking and variables; all is explained inside the repository.
+For CI/CD integration, import your GitHub repo into Azure DevOps. The YAML file inside the project folder should work automatically. Often with YAML, it may need some tweaking and variables; all is explained inside the repository and YAML files.
 
 ## Additional Resources
 An exercise book is included in the repository to help guide learning and further understanding.

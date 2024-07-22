@@ -8,7 +8,7 @@ schemas = [ ]
 displayName = "Development database"
 
 [environments.shadow]
-url = "jdbc:sqlserver://localhost;databaseName=AutoPilotShadowExtra;encrypt=true;integratedSecurity=true;trustServerCertificate=true"
+url = "jdbc:sqlserver://localhost;databaseName=AutoPilotShadow;encrypt=true;integratedSecurity=true;trustServerCertificate=true"
 displayName = "Shadow database"
 provisioner = "clean"
 

@@ -4,6 +4,9 @@ DECLARE @LogicalLogFileName NVARCHAR(128) = N'AdventureWorks2016_Log'
 DECLARE @DataFilePath NVARCHAR(260)
 DECLARE @LogFilePath NVARCHAR(260)
 DECLARE @DatabaseName NVARCHAR(128)
+-- Attempts to Auto Find the Paths to the logical files!
+DECLARE @mdfLocation nvarchar(256) = CAST(SERVERPROPERTY('InstanceDefaultDataPath') AS nvarchar(200));
+DECLARE @ldfLocation nvarchar(256) = CAST(SERVERPROPERTY('InstanceDefaultLogPath') AS nvarchar(200));
 
 DECLARE @mySQL NVARCHAR(MAX)  -- Declare @mySQL once at the beginning
 
@@ -26,8 +29,10 @@ BEGIN
     WHERE TempDB.RowNum = @Counter)
 
     -- Define file paths for current database
-    SET @DataFilePath = N'C:\Program Files\Microsoft SQL Server\MSSQL13.MSSQLSERVER\MSSQL\DATA\' + @DatabaseName + '_Data.mdf'
-    SET @LogFilePath = N'C:\Program Files\Microsoft SQL Server\MSSQL13.MSSQLSERVER\MSSQL\DATA\' + @DatabaseName + '_Log.ldf'
+
+
+    SET @DataFilePath = @mdfLocation + @DatabaseName + '_Data.mdf'
+	SET @LogFilePath = @ldfLocation + @DatabaseName + '_Log.ldf'
 
     -- Use master database
     USE [master]

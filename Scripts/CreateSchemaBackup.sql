@@ -1,5 +1,5 @@
 -- Variables for source and cloned database names
-DECLARE @SourceDB NVARCHAR(128) = N'AdventureWorks';
+DECLARE @SourceDB NVARCHAR(128) = N'AutoPilotDev';
 DECLARE @BackupDB NVARCHAR(128) = @SourceDB + N'_Schema';
 
 -- Clone the source database schema only
@@ -15,4 +15,9 @@ DECLARE @BackupCommand NVARCHAR(MAX) =
 -- Execute the BACKUP DATABASE command
 EXEC sp_executesql @BackupCommand;
 
-
+-- Drop Schema Database If Exists
+DECLARE @drop nvarchar(100);
+DECLARE @Result NVARCHAR(200);
+SET @drop = 'DROP DATABASE IF EXISTS'
+SET @Result = (@drop+ ' '+@BackupDB)
+EXEC sp_executesql @Result

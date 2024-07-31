@@ -12,8 +12,6 @@ stages:
     jobs:
       - job: deploy_build
         displayName: "Deploy Build"
-        pool:
-          name: $(AGENT_POOL)
         
         variables:
           stage: 'Build'
@@ -23,6 +21,7 @@ stages:
           target_Password: "" 
           executeBuild: true
           publishArtifacts: true
+          pool: $(AGENT_POOL)
 
         steps:
           - checkout: self

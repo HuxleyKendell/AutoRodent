@@ -1,7 +1,9 @@
 name: Enterprise-Workflow
 
 variables:
-  # PUT THIS IN A AUTOPILOT VARIABLE GROUP ----> FLYWAY_LICENSE_KEY: $(FLYWAY_LICENSE_KEY)
+  # PUT THIS IN A AUTOPILOT VARIABLE GROUP: 
+  # ----> FLYWAY_LICENSE_KEY: $(FLYWAY_LICENSE_KEY)
+  # ----> AGENT_POOL: $(AGENT_POOL)
   FIRST_UNDO_SCRIPT: "002"
   group: AutoPilot
 
@@ -11,7 +13,7 @@ stages:
       - job: deploy_build
         displayName: "Deploy Build"
         pool:
-          name: default
+          name: $(AGENT_POOL)
         
         variables:
           stage: 'Build'
@@ -42,7 +44,7 @@ stages:
       - job: prod_preparation
         displayName: 'Production Deployment Preparation - Report Creation'
         pool:
-          name: default
+          name: $(AGENT_POOL)
 
         variables:
           stage: 'Prod'
@@ -64,7 +66,6 @@ stages:
           - script: |
               flyway -baselineOnMigrate=true -licenseKey="$(FLYWAY_LICENSE_KEY)" -configFiles="$(Build.SourcesDirectory)/flyway.toml" -locations="filesystem:$(Build.SourcesDirectory)/migrations" check -dryrun -changes -drift migrate info "-check.failOnDrift=$(failReleaseIfDriftDetected)" "-check.buildEnvironment=$(check_Environment)" -environment="$(target_Environment)" "-reportFilename=$(Build.SourcesDirectory)/reports/$(databaseName)-Run-$(Build.BuildId)-Check-Report.html" -user="$(target_user)" -password="$(target_password)" -check.buildUser="$(check_user)" -check.buildPassword="$(check_password)"
             displayName: 'Create Check Reports'
-            condition: eq(variables['generateDriftAndChangeReport'], true)
 
           - task: PublishBuildArtifacts@1
             displayName: 'Publish Check Report as Artifact'
@@ -75,7 +76,7 @@ stages:
       - job: deploy_production
         displayName: 'Deploy Production'
         pool:
-          name: default
+          name: $(AGENT_POOL)
         dependsOn: prod_preparation
 
         variables:

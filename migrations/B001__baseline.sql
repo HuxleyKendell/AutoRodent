@@ -65,24 +65,24 @@ END CATCH;
 BEGIN
 IF NOT EXISTS (SELECT * FROM sys.tables WHERE name = 'flyway_schema_history' AND schema_id = SCHEMA_ID('dbo'))
 BEGIN
-    USE AutoPilotCheck 
-		CREATE TABLE [dbo].[flyway_schema_history](
-			[installed_rank] [INT] NOT NULL,
-			[version] [NVARCHAR](50) NULL,
-			[description] [NVARCHAR](200) NULL,
-			[type] [NVARCHAR](20) NOT NULL,
-			[script] [NVARCHAR](1000) NOT NULL,
-			[checksum] [INT] NULL,
-			[installed_by] [NVARCHAR](100) NOT NULL,
-			[installed_on] [DATETIME] NOT NULL,
-			[execution_time] [INT] NOT NULL,
-			[success] [BIT] NOT NULL,
-		 CONSTRAINT [flyway_schema_history_pk] PRIMARY KEY CLUSTERED 
-		(
-			[installed_rank] ASC
-		)WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON) ON [PRIMARY]
-		) ON [PRIMARY]
-
-		ALTER TABLE [dbo].[flyway_schema_history] ADD DEFAULT (GETDATE()) FOR [installed_on]
+    USE [${flyway:database}] 
+	CREATE TABLE [dbo].[flyway_schema_history](
+		[installed_rank] [INT] NOT NULL,
+		[version] [NVARCHAR](50) NULL,
+		[description] [NVARCHAR](200) NULL,
+		[type] [NVARCHAR](20) NOT NULL,
+		[script] [NVARCHAR](1000) NOT NULL,
+		[checksum] [INT] NULL,
+		[installed_by] [NVARCHAR](100) NOT NULL,
+		[installed_on] [DATETIME] NOT NULL,
+		[execution_time] [INT] NOT NULL,
+		[success] [BIT] NOT NULL,
+	 CONSTRAINT [flyway_schema_history_pk] PRIMARY KEY CLUSTERED 
+	(
+		[installed_rank] ASC
+	)WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON) ON [PRIMARY]
+	) ON [PRIMARY]
+	
+	ALTER TABLE [dbo].[flyway_schema_history] ADD DEFAULT (GETDATE()) FOR [installed_on]
 END
 END

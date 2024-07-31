@@ -12,10 +12,21 @@ url = "jdbc:sqlserver://localhost;databaseName=AutoPilotShadow;encrypt=true;inte
 displayName = "Shadow database"
 provisioner = "clean"
 
-[environments.production]
+[environments.Prod]
 url = "jdbc:sqlserver://localhost;databaseName=AutoPilotProd;encrypt=true;integratedSecurity=true;trustServerCertificate=true"
-schemas = [ ]
 displayName = "Production"
+
+[environments.Test]
+url = "jdbc:sqlserver://localhost;databaseName=AutoPilotTest;encrypt=true;integratedSecurity=true;trustServerCertificate=true"
+
+[environments.Check]
+url = "jdbc:sqlserver://localhost;databaseName=AutoPilotCheck;encrypt=true;integratedSecurity=true;trustServerCertificate=true"
+
+[environments.Build]
+url = "jdbc:sqlserver://localhost;databaseName=AutoPilotBuild;encrypt=true;integratedSecurity=true;trustServerCertificate=true"
+
+[environments.Staging]
+url = "jdbc:sqlserver://localhost;databaseName=AutoPilotStaging;encrypt=true;integratedSecurity=true;trustServerCertificate=true"
 
 [flyway]
 locations = [ "filesystem:migrations" ]

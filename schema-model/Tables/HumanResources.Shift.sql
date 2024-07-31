@@ -4,7 +4,8 @@ CREATE TABLE [HumanResources].[Shift]
 [Name] [dbo].[Name] NOT NULL,
 [StartTime] [time] NOT NULL,
 [EndTime] [time] NOT NULL,
-[ModifiedDate] [datetime] NOT NULL CONSTRAINT [DF_Shift_ModifiedDate] DEFAULT (getdate())
+[ModifiedDate] [datetime] NOT NULL CONSTRAINT [DF_Shift_ModifiedDate] DEFAULT (getdate()),
+[Hux] [nchar] (10) NULL
 )
 GO
 ALTER TABLE [HumanResources].[Shift] ADD CONSTRAINT [PK_Shift_ShiftID] PRIMARY KEY CLUSTERED ([ShiftID])

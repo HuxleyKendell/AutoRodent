@@ -47,7 +47,7 @@ stages:
         variables:
           stage: 'Prod'
           databaseName: "AutoPilotProd"
-          target_Environment: "Build"
+          target_Environment: "Prod"
           target_User: ""
           target_Password: "" 
           check_Environment: "Check"
@@ -81,7 +81,7 @@ stages:
         variables:
           stage: 'Prod'
           databaseName: "AutoPilotProd"
-          target_Environment: "Build"
+          target_Environment: "Prod"
           target_User: ""
           target_Password: "" 
           check_Environment: "Check"

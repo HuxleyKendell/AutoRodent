@@ -42,8 +42,6 @@ stages:
     jobs:
       - job: prod_preparation
         displayName: 'Production Deployment Preparation - Report Creation'
-        pool:
-          name: $(AGENT_POOL)
 
         variables:
           stage: 'Prod'
@@ -58,6 +56,7 @@ stages:
           failReleaseIfDriftDetected: false
           staticCodeAnalysis: false
           publishArtifacts: true
+          pool: $(AGENT_POOL)
 
         steps:
           - checkout: self
@@ -74,8 +73,6 @@ stages:
 
       - job: deploy_production
         displayName: 'Deploy Production'
-        pool:
-          name: $(AGENT_POOL)
         dependsOn: prod_preparation
 
         variables:
@@ -91,6 +88,7 @@ stages:
           failReleaseIfDriftDetected: false
           staticCodeAnalysis: false
           publishArtifacts: true
+          pool: $(AGENT_POOL)
 
         steps:
           - checkout: self

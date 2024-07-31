@@ -10,8 +10,13 @@ DECLARE @BackupFilePath NVARCHAR(128) = N'${flyway:workingDirectory}\backups\Aut
 DECLARE @DatabaseName NVARCHAR(128) = N'${flyway:database}';
 DECLARE @LogicalDataFileName NVARCHAR(128) = 'AdventureWorks2016_Data';
 DECLARE @LogicalLogFileName NVARCHAR(128) = 'AdventureWorks2016_Log';
-DECLARE @DataFilePath NVARCHAR(260) = N'C:\Program Files\Microsoft SQL Server\MSSQL13.MSSQLSERVER\MSSQL\DATA\' + @DatabaseName + '_Data.mdf';
-DECLARE @LogFilePath NVARCHAR(260) = N'C:\Program Files\Microsoft SQL Server\MSSQL13.MSSQLSERVER\MSSQL\DATA\' + @DatabaseName + '_Log.ldf';
+
+-- Attempts to Auto Find the Paths to the logical files!
+DECLARE @mdfLocation NVARCHAR(256) = CAST(SERVERPROPERTY('InstanceDefaultDataPath') AS NVARCHAR(200));  -- Get the default data file path
+DECLARE @ldfLocation NVARCHAR(256) = CAST(SERVERPROPERTY('InstanceDefaultLogPath') AS NVARCHAR(200));  -- Get the default log file path
+
+DECLARE @DataFilePath NVARCHAR(260) = N'' + @mdfLocation + @DatabaseName + '_Data.mdf';
+DECLARE @LogFilePath NVARCHAR(260) = N'' + @ldfLocation + @DatabaseName + '_Log.ldf';
 DECLARE @mySQL NVARCHAR(MAX);
 
 -- Use master database
@@ -58,23 +63,26 @@ BEGIN CATCH
 END CATCH;
 -- Create the Flyway schema history table 
 BEGIN
-USE [${flyway:database}]
-    CREATE TABLE [dbo].[flyway_schema_history](
-	[installed_rank] [INT] NOT NULL,
-	[version] [NVARCHAR](50) NULL,
-	[description] [NVARCHAR](200) NULL,
-	[type] [NVARCHAR](20) NOT NULL,
-	[script] [NVARCHAR](1000) NOT NULL,
-	[checksum] [INT] NULL,
-	[installed_by] [NVARCHAR](100) NOT NULL,
-	[installed_on] [DATETIME] NOT NULL,
-	[execution_time] [INT] NOT NULL,
-	[success] [BIT] NOT NULL,
- CONSTRAINT [flyway_schema_history_pk] PRIMARY KEY CLUSTERED 
-(
-	[installed_rank] ASC
-)WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON) ON [PRIMARY]
-) ON [PRIMARY]
-END
+IF NOT EXISTS (SELECT * FROM sys.tables WHERE name = 'flyway_schema_history' AND schema_id = SCHEMA_ID('dbo'))
+BEGIN
+    USE AutoPilotCheck 
+		CREATE TABLE [dbo].[flyway_schema_history](
+			[installed_rank] [INT] NOT NULL,
+			[version] [NVARCHAR](50) NULL,
+			[description] [NVARCHAR](200) NULL,
+			[type] [NVARCHAR](20) NOT NULL,
+			[script] [NVARCHAR](1000) NOT NULL,
+			[checksum] [INT] NULL,
+			[installed_by] [NVARCHAR](100) NOT NULL,
+			[installed_on] [DATETIME] NOT NULL,
+			[execution_time] [INT] NOT NULL,
+			[success] [BIT] NOT NULL,
+		 CONSTRAINT [flyway_schema_history_pk] PRIMARY KEY CLUSTERED 
+		(
+			[installed_rank] ASC
+		)WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON) ON [PRIMARY]
+		) ON [PRIMARY]
 
-ALTER TABLE [dbo].[flyway_schema_history] ADD  DEFAULT (GETDATE()) FOR [installed_on]
+		ALTER TABLE [dbo].[flyway_schema_history] ADD DEFAULT (GETDATE()) FOR [installed_on]
+END
+END

@@ -58,6 +58,9 @@ BEGIN TRY
 END TRY
 BEGIN CATCH
     PRINT 'Error occurred during the restore operation for database ' + @DatabaseName;
+	PRINT ERROR_NUMBER()
+	PRINT ERROR_SEVERITY()
+	PRINT ERROR_STATE()
     PRINT ERROR_MESSAGE();
     RETURN;
 END CATCH;
@@ -65,7 +68,7 @@ END CATCH;
 BEGIN
 IF NOT EXISTS (SELECT * FROM sys.tables WHERE name = 'flyway_schema_history' AND schema_id = SCHEMA_ID('dbo'))
 BEGIN
-    USE [${flyway:database}] 
+    USE ${flyway:database} 
 	CREATE TABLE [dbo].[flyway_schema_history](
 		[installed_rank] [INT] NOT NULL,
 		[version] [NVARCHAR](50) NULL,

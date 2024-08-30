@@ -17,7 +17,7 @@ DECLARE @DatabaseList TABLE (  -- Create a table variable to hold the list of da
 
 -- Insert the database names into the table variable
 INSERT INTO @DatabaseList (DatabaseName)
-VALUES ('AutoPilotDev'), ('AutoPilotTest'), ('AutoPilotStaging'), ('AutoPilotProd'), ('AutoPilotShadow'), ('AutoPilotBuild'), ('AutoPilotCheck');
+VALUES ('AutoPilotDev'), ('AutoPilotTest'), ('AutoPilotProd'), ('AutoPilotShadow'), ('AutoPilotBuild'), ('AutoPilotCheck');
 
 DECLARE @Counter INT = 1;  -- Initialize a counter for the loop
 DECLARE @TotalCount INT = (SELECT COUNT(*) FROM @DatabaseList);  -- Get the total count of databases

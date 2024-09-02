@@ -30,11 +30,11 @@ jobs:
     env:
       stage: 'Build'
       
-      # Environment Secrets - In Real Ensure all of the below have been created as an Environment Secret (Projects Settings > Secrets > Actions section, specially related to the environment in question) #
-      databaseName: "WidgetBuild"
-      Environment: "Build" 
-      Username : "user" # If using SQL Authentication, make sure to populate these fields!
-      Password : "pass" # If using SQL Authentication, make sure to populate these fields!
+      # Environment Secrets - In a Production setup, Ensure all of the below have been created as an Environment Secret (Projects Settings > Secrets > Actions section, specially related to the environment in question) #
+      DATABASE_NAME: "WidgetBuild"
+      ENVIRONMENT: "Build" 
+      TARGET_DATABASE_USERNAME : "user" # If using SQL Authentication, make sure to populate these fields!
+      TARGET_DATABASE_PASSWORD : "pass" # If using SQL Authentication, make sure to populate these fields!
 
       displayName: 'Build'
       executeBuild: true
@@ -49,21 +49,19 @@ jobs:
       - name: Clean Build DB
         if: env.executeBuild == 'true'
         run: |
-          flyway -baselineOnMigrate="true" -user="${{ env.Username }}" -password="${{ env.Password }}" -licenseKey="${{ env.FLYWAY_LICENSE_KEY }}" -configFiles="${{ GITHUB.WORKSPACE }}\flyway.toml" -locations="filesystem:${{ GITHUB.WORKSPACE }}\migrations" info clean info -environment="${{ env.Environment }}" -cleanDisabled='false' -reportFilename="Reports\CleanDB"
+          flyway info clean info -environment="${{ env.ENVIRONMENT }}" -user="${{ env.TARGET_DATABASE_USERNAME }}" -password="${{ env.TARGET_DATABASE_PASSWORD }}" -licenseKey="${{ env.FLYWAY_LICENSE_KEY }}" -configFiles="${{ GITHUB.WORKSPACE }}\flyway.toml" -locations="filesystem:${{ GITHUB.WORKSPACE }}\migrations" -cleanDisabled='false' "-plugins.clean.mode=all"
         
       # Runs the Flyway Migrate command against the Build database
       - name: Migrate Build DB
         if: env.executeBuild == 'true'
         run: |
-          flyway -baselineOnMigrate="true" -user="${{ env.Username }}" -password="${{ env.Password }}" -licenseKey="${{ env.FLYWAY_LICENSE_KEY }}" -configFiles="${{ GITHUB.WORKSPACE }}\flyway.toml" -locations="filesystem:${{ GITHUB.WORKSPACE }}\migrations" info migrate info -environment="${{ env.Environment }}" -cleanDisabled='false' -reportFilename="Reports\ValidateVScripts"
-
-
+          flyway info migrate info -environment="${{ env.ENVIRONMENT }}" -user="${{ env.TARGET_DATABASE_USERNAME }}" -password="${{ env.TARGET_DATABASE_PASSWORD }}" -licenseKey="${{ env.FLYWAY_LICENSE_KEY }}" -configFiles="${{ GITHUB.WORKSPACE }}\flyway.toml" -locations="filesystem:${{ GITHUB.WORKSPACE }}\migrations" -cleanDisabled='false' -baselineOnMigrate="true"
           
       # Runs the Flyway Undo command against the Build database
       - name: undo Build DB
         if: env.executeBuild == 'true'
         run: |
-          flyway -baselineOnMigrate="true" -username=${{ env.Username }} -password=${{ env.Password }} -licenseKey="${{ env.FLYWAY_LICENSE_KEY }}" -configFiles="${{ GITHUB.WORKSPACE }}\flyway.toml" -locations="filesystem:${{ GITHUB.WORKSPACE }}\migrations" info undo info -environment="${{ env.Environment }}" -cleanDisabled='false' -target="${{ env.FIRST_UNDO_SCRIPT }}" -reportFilename="Reports/ValidateUScripts"
+          flyway info undo info -environment="${{ env.ENVIRONMENT }}" -user=${{ env.TARGET_DATABASE_USERNAME }} -password=${{ env.TARGET_DATABASE_PASSWORD }} -licenseKey="${{ env.FLYWAY_LICENSE_KEY }}" -configFiles="${{ GITHUB.WORKSPACE }}\flyway.toml" -locations="filesystem:${{ GITHUB.WORKSPACE }}\migrations" -baselineOnMigrate="true" -cleanDisabled='false' -target="${{ env.FIRST_UNDO_SCRIPT }}"
  
        # Create a directory to stage the artifact files
       - name: Stage files for publishing
@@ -90,14 +88,14 @@ jobs:
       env:
         stage: 'Prod'
         # Environment Secrets - Ensure all of the below have been created as an Environment Secret (Projects Settings > Secrets > Actions section, specially related to the environment in question) #
-        databaseName: "WidgetProd"
-        Environment: "Prod" 
-        Username : "user" # If using SQL Authentication, make sure to populate these fields!
-        Password : "pass" # If using SQL Authentication, make sure to populate these fields! 
+        DATABASE_NAME: "WidgetProd"
+        ENVIRONMENT: "Prod" 
+        TARGET_DATABASE_USERNAME : "user" # If using SQL Authentication, make sure to populate these fields!
+        TARGET_DATABASE_PASSWORD : "pass" # If using SQL Authentication, make sure to populate these fields! 
         
-        Check_Environment: "Check" 
-        Check_Username : "user" # If using SQL Authentication, make sure to populate these fields!
-        Check_Password : "pass" # If using SQL Authentication, make sure to populate these fields!
+        CHECK_ENVIRONMENT: "Check" 
+        CHECK_DATABASE_USERNAME : "user" # If using SQL Authentication, make sure to populate these fields!
+        CHECK_DATABASE_PASSWORD : "pass" # If using SQL Authentication, make sure to populate these fields!
         # End of Environment Secrets #
         generateDriftAndChangeReport: true
         failReleaseIfDriftDetected: false
@@ -113,7 +111,7 @@ jobs:
         - name: Create Check Reports
           if: env.generateDriftAndChangeReport == 'true'
           run: |
-            flyway -baselineOnMigrate="true" -licenseKey="${{ env.FLYWAY_LICENSE_KEY }}" -configFiles="${{ GITHUB.WORKSPACE }}\flyway.toml" -locations="filesystem:${{ GITHUB.WORKSPACE }}\migrations" check -dryrun -changes -drift migrate info "-check.failOnDrift=${{ env.failReleaseIfDriftDetected }}" "-check.buildEnvironment=${{ env.check_Environment }}" "-check.buildUser=${{ env.check_Username }}" "-check.buildPassword=${{ env.check_Password }}" -environment="${{ env.Environment }}" -user=${{ env.Username }} -password=${{ env.Password }} "-reportFilename=${{ GITHUB.WORKSPACE }}\reports\${{ env.databaseName }}-Run-${{ GITHUB.RUN_ID }}-Check-Report.html"
+            flyway check -dryrun -changes -drift -environment="${{ env.ENVIRONMENT }}" -user=${{ env.TARGET_DATABASE_USERNAME }} -password=${{ env.TARGET_DATABASE_PASSWORD }} -configFiles="${{ GITHUB.WORKSPACE }}\flyway.toml" -locations="filesystem:${{ GITHUB.WORKSPACE }}\migrations" "-check.failOnDrift=${{ env.failReleaseIfDriftDetected }}" "-check.buildEnvironment=${{ env.CHECK_ENVIRONMENT }}" "-check.buildUser=${{ env.CHECK_USERNAME }}" "-check.buildPassword=${{ env.CHECK_PASSWORD }}" "-reportFilename=${{ GITHUB.WORKSPACE }}\reports\${{ env.databaseName }}-Run-${{ GITHUB.RUN_ID }}-Check-Report.html" -licenseKey="${{ env.FLYWAY_LICENSE_KEY }}"
           continue-on-error: true
  
          # Create a directory to stage the artifact files
@@ -138,8 +136,11 @@ jobs:
     needs: prod-preparation
     env:
       stage: 'Prod'
-      databaseName: "WidgetProd"
-      Environment: "Prod" 
+
+      DATABASE_NAME: "WidgetProd"
+      ENVIRONMENT: "Prod" 
+      TARGET_DATABASE_USERNAME : "user" # If using SQL Authentication, make sure to populate these fields!
+      TARGET_DATABASE_PASSWORD : "pass" # If using SQL Authentication, make sure to populate these fields!
       
       pauseForCodeReview: true
  
@@ -152,4 +153,4 @@ jobs:
       - name: Migrate Build DB
         if: ${{ true }}
         run: |
-          flyway -user="${{ env.userName }}" -password="${{ env.password }}" -baselineOnMigrate="true" -licenseKey="${{ env.FLYWAY_LICENSE_KEY }}" -configFiles="${{ GITHUB.WORKSPACE }}\flyway.toml" -locations="filesystem:${{ GITHUB.WORKSPACE }}\migrations" info migrate info -environment="${{ env.Environment }}" -cleanDisabled='false'
+          flyway info migrate info -environment="${{ env.ENVIRONMENT }}" -user="${{ env.TARGET_DATABASE_USERNAME }}" -password="${{ env.TARGET_DATABASE_PASSWORD }}" -baselineOnMigrate="true" -licenseKey="${{ env.FLYWAY_LICENSE_KEY }}" -configFiles="${{ GITHUB.WORKSPACE }}\flyway.toml" -locations="filesystem:${{ GITHUB.WORKSPACE }}\migrations"

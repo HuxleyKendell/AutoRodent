@@ -6,7 +6,7 @@ DECLARE @BackupDB NVARCHAR(128) = @SourceDB + N'_Schema'; -- Define the cloned d
 DBCC CLONEDATABASE (@SourceDB, @BackupDB) WITH NO_STATISTICS, NO_QUERYSTORE, VERIFY_CLONEDB; -- Clone the source database schema without statistics and Query Store
 
 -- Backup the cloned database
-DECLARE @BackupPath NVARCHAR(256) = N'C:\WorkingFolders\FWD\AutoRodent\backups\AutoBackup.bak';  -- Step 2. Change me to match the location of Flyway Project
+DECLARE @BackupPath NVARCHAR(256) = N'C:\WorkingFolders\FWD\AutoRodent\backups\AutoBackup_Customer.bak';  -- Step 2. Change me to match the location of Flyway Project
 
 -- Construct the BACKUP DATABASE command
 DECLARE @BackupCommand NVARCHAR(MAX) = 

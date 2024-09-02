@@ -32,7 +32,7 @@ jobs:
       stage: 'Build'
       
       # Environment Secrets - In a Production setup, Ensure all of the below have been created as an Environment Secret (Projects Settings > Secrets > Actions section, specially related to the environment in question) #
-      DATABASE_NAME: "WidgetBuild"
+      DATABASE_NAME: "AutoPilotBuild"
       ENVIRONMENT: "Build" 
       TARGET_DATABASE_USERNAME : "user" # If using SQL Authentication, make sure to populate these fields!
       TARGET_DATABASE_PASSWORD : "pass" # If using SQL Authentication, make sure to populate these fields!

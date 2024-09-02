@@ -65,11 +65,15 @@ BEGIN CATCH
     RETURN;
 END CATCH;
 -- Create the Flyway schema history table 
-BEGIN
-IF NOT EXISTS (SELECT * FROM sys.tables WHERE name = 'flyway_schema_history' AND schema_id = SCHEMA_ID('dbo'))
-BEGIN
-    USE ${flyway:database} 
-	CREATE TABLE [dbo].[flyway_schema_history](
+BEGIN TRANSACTION
+GO
+IF @@ERROR <> 0 SET NOEXEC ON
+GO
+PRINT N'Creating [dbo].[flyway_schema_history]'
+GO
+USE ${flyway:database} 
+IF OBJECT_ID(N'[dbo].[flyway_schema_history]', 'U') IS NULL
+CREATE TABLE [dbo].[flyway_schema_history](
 		[installed_rank] [INT] NOT NULL,
 		[version] [NVARCHAR](50) NULL,
 		[description] [NVARCHAR](200) NULL,
@@ -85,7 +89,8 @@ BEGIN
 		[installed_rank] ASC
 	)WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON) ON [PRIMARY]
 	) ON [PRIMARY]
-	
-	ALTER TABLE [dbo].[flyway_schema_history] ADD DEFAULT (GETDATE()) FOR [installed_on]
-END
-END
+    ALTER TABLE [dbo].[flyway_schema_history] ADD DEFAULT (GETDATE()) FOR [installed_on]
+GO
+IF @@ERROR <> 0 SET NOEXEC ON
+GO
+COMMIT TRANSACTION

@@ -1,98 +1,244 @@
-name: Enterprise-Workflow
+name: Flyway-AutoPilot-Simple-Pipeline
+
+# trigger: #Uncomment lines 3-9 to enable an automatic pipeline trigger for any new migration scripts found in your preferred branch
+#   branches:
+#     include:
+#       - release
+#   paths:
+#     include:
+#       - migrations/*
 
 variables:
-  # PUT THIS IN A AUTOPILOT VARIABLE GROUP: 
-  # ----> FLYWAY_LICENSE_KEY: $(FLYWAY_LICENSE_KEY)
-  # ----> AGENT_POOL: $(AGENT_POOL)
-  FIRST_UNDO_SCRIPT: "002"
-  group: AutoPilot
+
+  # This is the relative path to the migrations folder in your project, such as:
+  # $(System.DefaultWorkingDirectory)\project
+  # The default is to have the migrations folder in the same directory as the yml file
+  WORKING_DIRECTORY: $(System.DefaultWorkingDirectory)
+  system.debug: false # Set this to true to enable verbose logging on your pipeline run
+  
+  # For added security, the below could be added to a variable group and marked as secure. Try this out in future once you get the pipeline running.
+  group: "AutoPilot"
+
+  FLYWAY_LICENSE_KEY: "" # 
+  BASELINE_VERSION: "001" # This should match the version number of your baseline script
+  FIRST_UNDO_SCRIPT: "002" # This should match the first undo version in your project
+  AGENT_POOL: "Default" # This should reference the agent pool your pipeline will use - default to default
 
 stages:
-  - stage: build
+  - stage: Build # Tip - The build stage is a great way of gaining quick early feedback about upcoming releases. It simply needs to point to an empty database to function.
+    pool: $(AGENT_POOL)
+    displayName: Build Stage 
     jobs:
-      - job: deploy_build
-        displayName: "Deploy Build"
+    - job: Build
+      variables: # Tip - For sensitive variables, these can be made into a secret by clicking the Variables button in top right corner of the YAML pipeline editor.
+        DATABASE_NAME: "AutoPilotBuild" # Name of the target database. In this case an empty disposable database we can use for build testing.
+        TARGET_ENVIRONMENT: "Build" # The JDBC connection string to access the target environment. Tip - Use Flyway Desktop to generate this
+        TARGET_DATABASE_USERNAME: "MyUsername" # Optional - If SQL Authentication is used, provide the relevant database username. Otherwise, leave blank
+        TARGET_DATABASE_PASSWORD: "MyPassword" # Optional - If SQL Authentication is used, provide the relevant database password. Otherwise, leave blank
+        executeBuild: true # Turn to false to skip the build stage tasks
+      #- group: redgate_build_vars # Sensitive variables can also be setup in a stage level Variable Group, once set they can be linked by pointing to the group as follows.
+
+      steps:
         
-        variables:
-          stage: 'Build'
-          displayName: 'Build'
-          targetEnvironment: "Build"
-          target_User: ""
-          target_Password: "" 
-          executeBuild: true
-          publishArtifacts: true
-          pool: $(AGENT_POOL)
+        # Step 1 - Ensure the Build Database is cleaned of all objects, meaning the build starts from scratch
+        - script: |
+            flyway info clean info -environment="$(TARGET_ENVIRONMENT)" -user="$(TARGET_DATABASE_USERNAME)" -password="$(TARGET_DATABASE_PASSWORD)" "-plugins.clean.mode=all" -errorOverrides=S0001:0:I- -licenseKey="$(FLYWAY_LICENSE_KEY)" -configFiles="$(WORKING_DIRECTORY)/flyway.toml" -locations="filesystem:$(WORKING_DIRECTORY)/migrations"
+          continueOnError: false
+          workingDirectory: '$(WORKING_DIRECTORY)'
+          displayName: 'Clean Build DB'
+          condition: eq(variables['executeBuild'], true)
+          env:
+            FLYWAY_CLEAN_DISABLED: false # This should only be disabled for temporary sandbox databases, like Build
 
-        steps:
-          - checkout: self
-          
-          - script: |
-              flyway -baselineOnMigrate=true -licenseKey="$(FLYWAY_LICENSE_KEY)" -configFiles="$(Build.SourcesDirectory)/flyway.toml" -locations="filesystem:$(Build.SourcesDirectory)/migrations" info clean info -environment="$(targetEnvironment)" -cleanDisabled=false -user="$(target_user)" -password="$(target_password)"
-            displayName: 'Clean Build DB'
+        # Step 2 - Migrate all scripts from the migration folder, to verify they can be deployed against an empty database. This is the quickest way to get feedback about problematic scripts
+        - script: |
+            flyway info migrate info -environment="$(TARGET_ENVIRONMENT)" -user="$(TARGET_DATABASE_USERNAME)" -password="$(TARGET_DATABASE_PASSWORD)" "-plugins.clean.mode=all" -errorOverrides=S0001:0:I- -baselineOnMigrate=true -licenseKey="$(FLYWAY_LICENSE_KEY)" -configFiles="$(WORKING_DIRECTORY)/flyway.toml" -locations="filesystem:$(WORKING_DIRECTORY)/migrations"
+          continueOnError: false
+          workingDirectory: '$(WORKING_DIRECTORY)'
+          condition: eq(variables['executeBuild'], true)
+          displayName: 'Validate Migrate Scripts'
 
-          - script: |
-              flyway -baselineOnMigrate=true -licenseKey="$(FLYWAY_LICENSE_KEY)" -configFiles="$(Build.SourcesDirectory)/flyway.toml" -locations="filesystem:$(Build.SourcesDirectory)/migrations" info migrate info -environment="$(targetEnvironment)" -cleanDisabled=false -user="$(target_user)" -password="$(target_password)"
-            displayName: 'Migrate Build DB'
+        - script: |
+            flyway info undo info -environment="$(TARGET_ENVIRONMENT)" -user="$(TARGET_DATABASE_USERNAME)" -password="$(TARGET_DATABASE_PASSWORD)" -errorOverrides=S0001:0:I- -licenseKey="$(FLYWAY_LICENSE_KEY)" -configFiles="$(WORKING_DIRECTORY)/flyway.toml" -locations="filesystem:$(WORKING_DIRECTORY)/migrations" -target="$(FIRST_UNDO_SCRIPT)"
+          continueOnError: true
+          workingDirectory: '$(WORKING_DIRECTORY)'
+          condition: eq(variables['executeBuild'], true)
+          displayName: 'Validate Undo Scripts'
 
-          - script: |
-              flyway -baselineOnMigrate=true -licenseKey="$(FLYWAY_LICENSE_KEY)" -configFiles="$(Build.SourcesDirectory)/flyway.toml" -locations="filesystem:$(Build.SourcesDirectory)/migrations" info undo info -environment="$(targetEnvironment)" -cleanDisabled=false -target="$(FIRST_UNDO_SCRIPT)" -user="$(target_user)" -password="$(target_password)"
-            displayName: 'Undo Build DB'
+        - task: CopyFiles@2
+          inputs:
+            SourceFolder: '$(WORKING_DIRECTORY)'
+            Contents: '**'
+            TargetFolder: '$(System.ArtifactsDirectory)'
 
-  - stage: prod
+        - task: PublishBuildArtifacts@1 # This step publishes all the validated Flyway Project files as a build artifact
+          displayName: 'Publish Build Artifact'
+          inputs:
+            ArtifactName: 'Flyway-CI-$(Build.BuildId)'
+            PathtoPublish: '$(System.ArtifactsDirectory)'
+
+  - stage: Test
+    pool: $(AGENT_POOL)
+    displayName: Test Stage
+    dependsOn: Build
+    variables: # Tip - For sensitive variables, these can be made into a secret by clicking the Variables button in top right corner of the YAML pipeline editor.
+      DATABASE_NAME: "AutoPilotTest" # Name of the target database. In this case an empty disposable database we can use for build testing.
+      TARGET_ENVIRONMENT: "Test"
+      TARGET_DATABASE_USERNAME: "MyUsername" # Optional - If SQL Authentication is used, provide the relevant database username. Otherwise, leave blank
+      TARGET_DATABASE_PASSWORD: "MyPassword" # Optional - If SQL Authentication is used, provide the relevant database password. Otherwise, leave blank
+      REPORT_ENVIRONMENT: "Check"
+      REPORT_DATABASE_USERNAME: "MyUsername" # Optional - If SQL Authentication is used, provide the relevant database username. Otherwise, leave blank
+      REPORT_DATABASE_PASSWORD: "MyPassword" # Optional - If SQL Authentication is used, provide the relevant database password. Otherwise, leave blank
+      pauseForCodeReview: false
+      generateReport: true                     #Turn on to enable the Check Report
+      #- group: ${{stage.variableGroupName}}
     jobs:
-      - job: prod_preparation
-        displayName: 'Production Deployment Preparation - Report Creation'
+    - job: ChangeReport
+      displayName: "Flyway - Pre Release Change Report"
+      condition: eq(variables['generateReport'], true)
+      variables:
+        EXAMPLE: ""
+      #- group: ${{stage.variableGroupName}}
+      #- group: pipeline_flyway_vars
+      steps:
+        - task: DownloadBuildArtifacts@0
+          inputs:
+            buildType: 'current'
+            downloadType: 'single'
+            artifactName: 'Flyway-CI-$(Build.BuildId)'
+            downloadPath: '$(System.ArtifactsDirectory)'
+        
+        - script: |
+              flyway check -dryrun -changes -drift info -environment="$(TARGET_ENVIRONMENT)" -user="$(TARGET_DATABASE_USERNAME)" -password="$(TARGET_DATABASE_PASSWORD)" -check.buildEnvironment="$(REPORT_ENVIRONMENT)" -check.buildUser="$(REPORT_DATABASE_USERNAME)" -check.buildPassword="$(REPORT_DATABASE_PASSWORD)" -licenseKey="$(FLYWAY_LICENSE_KEY)" -configFiles="$(System.ArtifactsDirectory)\Flyway-CI-$(Build.BuildId)\flyway.toml" -locations="filesystem:$(System.ArtifactsDirectory)\Flyway-CI-$(Build.BuildId)\migrations" "-reportEnabled=true" "-reportFilename=$(System.ArtifactsDirectory)\Flyway-CI-$(Build.BuildId)\reports\$(DATABASE_NAME)-Run-$(Build.BuildId)-Check-Report.html"
+          workingDirectory: '$(WORKING_DIRECTORY)'
+          continueOnError: false
+          displayName: 'Flyway Check Report'
+        
+        - task: PublishBuildArtifacts@1
+          displayName: 'Publish Check Report'
+          condition: always()
+          inputs:
+            ArtifactName: 'Flyway-CD-Reports-$(Build.BuildId)'
+            PathtoPublish: '$(System.ArtifactsDirectory)\Flyway-CI-$(Build.BuildId)\reports\$(DATABASE_NAME)-Run-$(Build.BuildId)-Check-Report.html'
+        
+        # - task: JakubRumpca.azure-pipelines-html-report.PublishHtmlReport.PublishHtmlReport@1 #This is an optional task that can make viewing the Check report much easier in each run. Disable if required.
+        #   displayName: 'Publish HTML Report'
+        #   inputs:
+        #     reportDir: '$(System.ArtifactsDirectory)\Flyway-CI-$(Build.BuildId)\reports\$(DATABASE_NAME)-Run-$(Build.BuildId)-Check-Report.html'
 
-        variables:
-          stage: 'Prod'
-          databaseName: "AutoPilotProd"
-          target_Environment: "Prod"
-          target_User: ""
-          target_Password: "" 
-          check_Environment: "Check"
-          check_User: ""
-          check_Password: ""
-          generateDriftAndChangeReport: true
-          failReleaseIfDriftDetected: false
-          staticCodeAnalysis: false
-          publishArtifacts: true
-          pool: $(AGENT_POOL)
+    - job: CodeReview
+      displayName: Code Review
+      dependsOn: ChangeReport
+      pool: server
+      steps:
+        - task: ManualValidation@0
+          condition: eq(variables['pauseForCodeReview'], true)
+          displayName: 'Review Change Report Prior To Release'
+          timeoutInMinutes: 4320 # job times out in 1 hour
+          inputs:
+            notifyUsers: |
+              user@email.com
+              example@example.com
+            instructions: 'Review changes'
+        
+    - job: Deploy
+      displayName: "Deploy"
+      dependsOn: CodeReview
+      variables:
+        EXAMPLE: ""
+      steps:
+        - task: DownloadBuildArtifacts@0
+          inputs:
+            buildType: 'current'
+            downloadType: 'single'
+            artifactName: 'Flyway-CI-$(Build.BuildId)'
+            downloadPath: '$(System.ArtifactsDirectory)'
+        - script: |
+            flyway info migrate info -environment="$(TARGET_ENVIRONMENT)" -user="$(TARGET_DATABASE_USERNAME)" -password="$(TARGET_DATABASE_PASSWORD)" -errorOverrides=S0001:0:I- -baselineOnMigrate=true -baselineVersion="$(BASELINE_VERSION)" -licenseKey="$(FLYWAY_LICENSE_KEY)" -configFiles="$(System.ArtifactsDirectory)\Flyway-CI-$(Build.BuildId)\flyway.toml" -locations="filesystem:$(System.ArtifactsDirectory)\Flyway-CI-$(Build.BuildId)\migrations"
+          continueOnError: false
+          workingDirectory: '$(WORKING_DIRECTORY)'
+          displayName: 'Migrate Test DB'
+          condition:
+  
+  - stage: Prod
+    pool: $(AGENT_POOL)
+    displayName: Prod Stage
+    dependsOn: Test
+    variables: # Tip - For sensitive variables, these can be made into a secret by clicking the Variables button in top right corner of the YAML pipeline editor.
+      DATABASE_NAME: "Eastwind_Prod" # Name of the target database. In this case an empty disposable database we can use for build testing.
+      TARGET_ENVIRONMENT: "Prod"
+      TARGET_DATABASE_USERNAME: "MyUsername" # Optional - If SQL Authentication is used, provide the relevant database username. Otherwise, leave blank
+      TARGET_DATABASE_PASSWORD: "MyPassword" # Optional - If SQL Authentication is used, provide the relevant database password. Otherwise, leave blank
+      REPORT_ENVIRONMENT: "Check"
+      REPORT_DATABASE_USERNAME: "MyUsername" # Optional - If SQL Authentication is used, provide the relevant database username. Otherwise, leave blank
+      REPORT_DATABASE_PASSWORD: "MyPassword" # Optional - If SQL Authentication is used, provide the relevant database password. Otherwise, leave blank
+      pauseForCodeReview: false
+      generateReport: true                     #Turn on to enable the Check Report
+      #- group: ${{stage.variableGroupName}}
 
-        steps:
-          - checkout: self
+    jobs:
+    - job: ChangeReport
+      displayName: "Flyway - Pre Release Change Report"
+      condition: eq(variables['generateReport'], true)
+      variables:
+        EXAMPLE: ""
+      #- group: ${{stage.variableGroupName}}
+      #- group: pipeline_flyway_vars
+      steps:
+        - task: DownloadBuildArtifacts@0
+          inputs:
+            buildType: 'current'
+            downloadType: 'single'
+            artifactName: 'Flyway-CI-$(Build.BuildId)'
+            downloadPath: '$(System.ArtifactsDirectory)'
+        
+        - script: |
+              flyway check -dryrun -changes -drift info -environment="$(TARGET_ENVIRONMENT)" -user="$(TARGET_DATABASE_USERNAME)" -password="$(TARGET_DATABASE_PASSWORD)" -check.buildEnvironment="$(REPORT_ENVIRONMENT)" -check.buildUser="$(REPORT_DATABASE_USERNAME)" -check.buildPassword="$(REPORT_DATABASE_PASSWORD)" -licenseKey="$(FLYWAY_LICENSE_KEY)" -configFiles="$(System.ArtifactsDirectory)\Flyway-CI-$(Build.BuildId)\flyway.toml" -locations="filesystem:$(System.ArtifactsDirectory)\Flyway-CI-$(Build.BuildId)\migrations" "-reportEnabled=true" "-reportFilename=$(System.ArtifactsDirectory)\Flyway-CI-$(Build.BuildId)\reports\$(DATABASE_NAME)-Run-$(Build.BuildId)-Check-Report.html"
+          workingDirectory: '$(WORKING_DIRECTORY)'
+          continueOnError: false
+          displayName: 'Flyway Check Report'
+        
+        - task: PublishBuildArtifacts@1
+          displayName: 'Publish Check Report'
+          condition: always()
+          inputs:
+            ArtifactName: 'Flyway-CD-Reports-$(Build.BuildId)'
+            PathtoPublish: '$(System.ArtifactsDirectory)\Flyway-CI-$(Build.BuildId)\reports\$(DATABASE_NAME)-Run-$(Build.BuildId)-Check-Report.html'
+        
+        # - task: JakubRumpca.azure-pipelines-html-report.PublishHtmlReport.PublishHtmlReport@1 #This is an optional task that can make viewing the Check report much easier in each run. Disable if required.
+        #   displayName: 'Publish HTML Report'
+        #   inputs:
+        #     reportDir: '$(System.ArtifactsDirectory)\Flyway-CI-$(Build.BuildId)\reports\$(DATABASE_NAME)-Run-$(Build.BuildId)-Check-Report.html'
 
-          - script: |
-              flyway -baselineOnMigrate=true -licenseKey="$(FLYWAY_LICENSE_KEY)" -configFiles="$(Build.SourcesDirectory)/flyway.toml" -locations="filesystem:$(Build.SourcesDirectory)/migrations" check -dryrun -changes -drift migrate info "-check.failOnDrift=$(failReleaseIfDriftDetected)" "-check.buildEnvironment=$(check_Environment)" -environment="$(target_Environment)" "-reportFilename=$(Build.SourcesDirectory)/reports/$(databaseName)-Run-$(Build.BuildId)-Check-Report.html" -user="$(target_user)" -password="$(target_password)" -check.buildUser="$(check_user)" -check.buildPassword="$(check_password)"
-            displayName: 'Create Check Reports'
-
-          - task: PublishBuildArtifacts@1
-            displayName: 'Publish Check Report as Artifact'
-            inputs:
-              PathtoPublish: $(Build.SourcesDirectory)/reports
-              ArtifactName: flyway-reports
-
-      - job: deploy_production
-        displayName: 'Deploy Production'
-        dependsOn: prod_preparation
-
-        variables:
-          stage: 'Prod'
-          databaseName: "AutoPilotProd"
-          target_Environment: "Prod"
-          target_User: ""
-          target_Password: "" 
-          check_Environment: "Check"
-          check_User: ""
-          check_Password: ""
-          generateDriftAndChangeReport: true
-          failReleaseIfDriftDetected: false
-          staticCodeAnalysis: false
-          publishArtifacts: true
-          pool: $(AGENT_POOL)
-
-        steps:
-          - checkout: self
-
-          - script: |
-              flyway -baselineOnMigrate=true -licenseKey="$(FLYWAY_LICENSE_KEY)" -configFiles="$(Build.SourcesDirectory)/flyway.toml" -locations="filesystem:$(Build.SourcesDirectory)/migrations" info migrate info -environment="$(target_Environment)"
-            displayName: 'Migrate Build DB'
+    - job: CodeReview
+      displayName: Code Review
+      condition: eq(variables['pauseForCodeReview'], true)
+      pool: server
+      steps:
+        - task: ManualValidation@0
+          displayName: 'Review Change Report Prior To Release'
+          timeoutInMinutes: 4320 # job times out in 1 hour
+          inputs:
+            notifyUsers: |
+              user@email.com
+              example@example.com
+            instructions: 'Review changes'
+        
+    - job: Deploy
+      displayName: "Deploy"
+      dependsOn: CodeReview
+      variables:
+        EXAMPLE: ""
+      steps:
+        - task: DownloadBuildArtifacts@0
+          inputs:
+            buildType: 'current'
+            downloadType: 'single'
+            artifactName: 'Flyway-CI-$(Build.BuildId)'
+            downloadPath: '$(System.ArtifactsDirectory)'
+        - script: |
+            flyway info migrate info -environment="$(TARGET_ENVIRONMENT)" -user="$(TARGET_DATABASE_USERNAME)" -password="$(TARGET_DATABASE_PASSWORD)" -errorOverrides=S0001:0:I- -baselineOnMigrate=true -baselineVersion="$(BASELINE_VERSION)" -licenseKey="$(FLYWAY_LICENSE_KEY)" -configFiles="$(System.ArtifactsDirectory)\Flyway-CI-$(Build.BuildId)\flyway.toml" -locations="filesystem:$(System.ArtifactsDirectory)\Flyway-CI-$(Build.BuildId)\migrations"
+          continueOnError: false
+          workingDirectory: '$(WORKING_DIRECTORY)'
+          displayName: 'Migrate Prod DB'
+          condition:

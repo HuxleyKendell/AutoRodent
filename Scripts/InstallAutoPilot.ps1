@@ -165,3 +165,21 @@ Invoke-Sqlcmd -Query $sqlRestore -ServerInstance $serverName
 
 Write-Host "Succesfully Restored: $logicalLogFileName"
 
+
+Invoke-Sqlcmd -Query $sqlRestore -ServerInstance $serverName
+
+Write-Host "Succesfully Restored: $logicalLogFileName"
+
+# Step 4: Update the B001__baseline.sql script with the correct logical data and log file paths
+$baselineFilePath = "C:\AutoPilotTests\Flyway-AutoPilot-AB\migrations\B001__baseline.sql"
+$baselineContent = Get-Content $baselineFilePath
+
+# Replace placeholders with actual logical data and log file names
+$updatedBaselineContent = $baselineContent `
+    -replace "TEMPORARYDATAFILENAME", $logicalDataFileName `
+    -replace "LogicalLogFileName", $logicalLogFileName `
+
+# Write the updated content back to the file
+$updatedBaselineContent | Set-Content $baselineFilePath
+
+Write-Host "Baseline script updated successfully with logical paths."
